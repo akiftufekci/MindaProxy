@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="tr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MindaProxy - Proxy Aracı</title>
+    <link rel="stylesheet" href="assets/styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+  </head>
+  <body>
+    <!-- Header -->
+    <header class="header">
+      <h1>MindaProxy</h1>
+      <p>Proxy Çekme ve Kontrol Aracı</p>
+    </header>
+
+    <div class="main-layout">
+      <!-- Sol Navbar -->
+      <nav class="navbar">
+        <div class="navbar-brand">
+          <i class="fas fa-network-wired"></i>
+          <span>MindaProxy</span>
+        </div>
+        <ul class="nav-menu">
+          <li class="nav-item" id="btn-fetch-proxies">
+            <i class="fas fa-cloud-download-alt"></i>
+            <span>Proxy Çek</span>
+          </li>
+          <li class="nav-item" id="btn-check-proxies">
+            <i class="fas fa-check-circle"></i>
+            <span>Proxy Kontrol</span>
+          </li>
+          <li class="nav-item" id="btn-proxy-list">
+            <i class="fas fa-list"></i>
+            <span>Proxy Listesi</span>
+          </li>
+          <li class="nav-item" id="btn-proxy-count">
+            <i class="fas fa-list-ol"></i>
+            <span>Toplam Proxy</span>
+          </li>
+          <li class="nav-item" id="btn-accounts">
+            <i class="fas fa-user"></i>
+            <span>Hesaplarımız</span>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Ana içerik -->
+      <div class="content-area">
+        <!-- Üst Container -->
+        <div class="top-container">
+          <!-- Proxy çekme sayfası -->
+          <div id="fetch-proxies-page" class="card" style="display: none">
+            <div class="card-header">
+              <div class="card-icon">
+                <i class="fas fa-cloud-download-alt"></i>
+              </div>
+              <div class="card-header-text">
+                <h2 class="card-title">Proxy Çekme</h2>
+                <p class="card-subtitle">
+                  Çeşitli API kaynaklarından proxy listesi topla
+                </p>
+              </div>
+            </div>
+
+            <div class="api-sources">
+              <h3 class="section-title">API Kaynakları</h3>
+              <div class="api-list">
+                <div class="api-item">
+                  <i class="fas fa-server"></i>
+                  <span>ProxyScrape API</span>
+                </div>
+                <div class="api-item">
+                  <i class="fas fa-server"></i>
+                  <span>Proxy-List Download API</span>
+                </div>
+                <div class="api-item">
+                  <i class="fas fa-server"></i>
+                  <span>GitHub/TheSpeedX API</span>
+                </div>
+                <div class="api-item">
+                  <i class="fas fa-server"></i>
+                  <span>ProxyScan API</span>
+                </div>
+                <div class="api-item">
+                  <i class="fas fa-server"></i>
+                  <span>OpenProxyList API</span>
+                </div>
+                <div class="api-item">
+                  <i class="fas fa-server"></i>
+                  <span>GitHub/ShiftyTR API</span>
+                </div>
+                <div class="api-item">
+                  <i class="fas fa-server"></i>
+                  <span>GitHub/monosans API</span>
+                </div>
+                <div class="api-item">
+                  <i class="fas fa-server"></i>
+                  <span>GitHub/jetkai API</span>
+                </div>
+                <div class="api-item">
+                  <i class="fas fa-server"></i>
+                  <span>GitHub/hookzof API</span>
+                </div>
+                <div class="api-item">
+                  <i class="fas fa-server"></i>
+                  <span>GeoNode API</span>
+                </div>
+                <div class="api-item">
+                  <i class="fas fa-server"></i>
+                  <span>SpysMe API</span>
+                </div>
+              </div>
+            </div>
+
+            <div id="fetch-status" style="display: none"></div>
+
+            <div class="actions">
+              <button id="start-fetch" class="btn btn-primary">
+                <i class="fas fa-play"></i> Başlat
+              </button>
+            </div>
+          </div>
+
+          <!-- Proxy kontrol sayfası -->
+          <div id="check-proxies-page" class="card" style="display: none">
+            <div class="card-header">
+              <div class="card-icon">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div class="card-header-text">
+                <h2 class="card-title">Proxy Kontrol</h2>
+                <p class="card-subtitle">
+                  Proxy listesini kontrol et ve çalışan proxyler listesini
+                  oluştur
+                </p>
+              </div>
+            </div>
+
+            <div id="check-status" style="display: none"></div>
+
+            <div id="check-progress-container" style="display: none">
+              <div class="progress-container">
+                <div id="check-progress-bar" class="progress-bar"></div>
+              </div>
+              <p id="check-progress-text" class="progress-text">0 / 0 (%0)</p>
+            </div>
+
+            <div class="actions">
+              <button id="start-check" class="btn btn-primary">
+                <i class="fas fa-play"></i> Başlat
+              </button>
+            </div>
+          </div>
+
+          <!-- Proxy Listesi Sayfası -->
+          <div id="proxy-list-page" class="card" style="display: none">
+            <div class="card-header">
+              <div class="card-icon">
+                <i class="fas fa-list"></i>
+              </div>
+              <div class="card-header-text">
+                <h2 class="card-title">Proxy Listesi</h2>
+                <p class="card-subtitle">Çalışan proxy'lerin listesi</p>
+              </div>
+            </div>
+
+            <!-- Çalışan Proxyler Listesi -->
+            <div class="proxy-list-container">
+              <h3 class="section-title">
+                Çalışan Proxyler
+                <span
+                  class="proxy-count-badge badge-valid"
+                  id="valid-proxy-count"
+                  >0</span
+                >
+              </h3>
+              <div class="proxy-list" id="valid-proxy-list">
+                <div class="no-proxy-message">
+                  Henüz çalışan proxy bulunamadı.
+                </div>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button id="refresh-list" class="btn btn-secondary">
+                <i class="fas fa-sync-alt"></i> Listeyi Yenile
+              </button>
+              <button id="copy-all" class="btn btn-primary">
+                <i class="fas fa-copy"></i> Tümünü Kopyala
+              </button>
+            </div>
+          </div>
+
+          <!-- Proxy sayısı sayfası -->
+          <div id="proxy-count-page" class="card" style="display: none">
+            <div class="card-header">
+              <div class="card-icon">
+                <i class="fas fa-list-ol"></i>
+              </div>
+              <div class="card-header-text">
+                <h2 class="card-title">Toplam Proxy</h2>
+                <p class="card-subtitle">
+                  Günlük toplanan proxy istatistikleri
+                </p>
+              </div>
+            </div>
+
+            <div id="proxy-count-container">
+              <div class="stats-container">
+                <div class="stat-card">
+                  <div class="stat-icon">
+                    <i class="fas fa-database"></i>
+                  </div>
+                  <div class="stat-content">
+                    <span class="stat-title">Toplam Proxy Sayısı</span>
+                    <span id="proxy-count-value" class="stat-value">0</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hesaplarımız sayfası -->
+          <div id="accounts-page" class="card" style="display: none">
+            <div class="card-header">
+              <div class="card-icon">
+                <i class="fas fa-user"></i>
+              </div>
+              <div class="card-header-text">
+                <h2 class="card-title">Hesaplarımız</h2>
+                <p class="card-subtitle">
+                  İletişim ve sosyal medya hesaplarımız
+                </p>
+              </div>
+            </div>
+
+            <div class="accounts-container">
+              <div class="account-item">
+                <i class="fab fa-github"></i>
+                <p>
+                  Github:
+                  <a href="https://github.com/akiftufekci" target="_blank"
+                    >@akiftufekci</a
+                  >
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ana menü -->
+          <div id="main-menu">
+            <div class="welcome-card card">
+              <h2>MindaProxy'ye Hoşgeldiniz</h2>
+              <p>
+                Sol menüden yapmak istediğiniz işlemi seçebilirsiniz. Proxy
+                toplama, kontrol etme ve istatistik görüntüleme işlemlerini
+                gerçekleştirebilirsiniz.
+              </p>
+              <div class="welcome-icon">
+                <i class="fas fa-network-wired"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="src/renderer.js"></script>
+  </body>
+</html>
