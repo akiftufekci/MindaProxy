@@ -4,7 +4,6 @@ A lightweight Electron application for scraping, checking and managing proxies.
 
 ## Features
 
-![image](https://github.com/user-attachments/assets/a80f10ba-0146-4992-98a0-1fbf7d4f8d28)
 
 
 - Scrape proxies from multiple sources
