@@ -128,3 +128,36 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+# Build outputs
+dist/
+build/
+out/
+release/
+
+# Electron specific
+*.app
+*.exe
+*.dmg
+
+# Electron-builder output
+/dist_electron
+
+# Proxy files (created by the app)
+*_valid_proxies.txt
+*_invalid_proxies.txt
+
+# VS Code specific files
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# Local History for Visual Studio Code
+.history/
+
+# System Files
+.DS_Store
+Thumbs.db
