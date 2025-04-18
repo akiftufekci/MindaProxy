@@ -33,4 +33,3 @@ MIT License
 
 ---
 
-Developed by Akif Tüfekçi
