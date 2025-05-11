@@ -41,6 +41,10 @@ body {
   padding: 1rem;
   text-align: center;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .header h1 {
@@ -56,6 +60,38 @@ body {
 .header p {
   color: var(--text-secondary);
   font-size: 0.9rem;
+}
+
+/* Dil Seçici */
+.language-selector {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.language-btn {
+  background: none;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.3rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.language-btn:hover {
+  color: var(--text-light);
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.language-btn.active {
+  background-color: var(--primary-color);
+  color: white;
 }
 
 /* Ana Layout */

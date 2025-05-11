@@ -3,6 +3,7 @@ const fs = require("fs");
 const path = require("path");
 const { formatDate } = require("./utils");
 const API_LIST = require("./apilist");
+const { t, tParams } = require("./translations");
 
 async function fetchProxies() {
   const date = formatDate(new Date());
@@ -21,7 +22,9 @@ async function fetchProxies() {
             extractedProxies.forEach((proxy) => proxies.add(proxy));
           }
         } catch (error) {
-          console.error(`Proxy API hatası: ${url} - ${error.message}`);
+          console.error(
+            tParams("errors.proxyApiError", { url, error: error.message })
+          );
         }
       })
     );
@@ -31,7 +34,9 @@ async function fetchProxies() {
 
     return proxyArray;
   } catch (error) {
-    console.error(`Proxy toplama hatası: ${error.message}`);
+    console.error(
+      tParams("errors.proxyCollectionError", { error: error.message })
+    );
     throw error;
   }
 }
@@ -56,7 +61,7 @@ function getProxyCount() {
 
     return 0;
   } catch (error) {
-    console.error(`Proxy sayısı hatası: ${error.message}`);
+    console.error(tParams("errors.proxyCountError", { error: error.message }));
     return 0;
   }
 }

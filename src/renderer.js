@@ -1,4 +1,11 @@
 const { ipcRenderer } = require("electron");
+const {
+  t,
+  tParams,
+  setLanguage,
+  getCurrentLanguage,
+  getAvailableLanguages,
+} = require("./translations");
 
 // Sayfa elemanları
 const mainMenu = document.getElementById("main-menu");
@@ -52,6 +59,107 @@ let currentCheckProgress = {
   progress: 0,
 };
 let lastCheckStatus = null;
+
+// Dil seçimi butonları
+const languageButtons = document.querySelectorAll(".language-btn");
+
+// Çeviri gereken elemanlar
+const translationElements = [
+  { elem: document.querySelector("title"), key: "appTitle" },
+  { elem: document.querySelector(".header p"), key: "appDescription" },
+  {
+    elem: document.querySelector("#btn-fetch-proxies span"),
+    key: "navbar.fetchProxies",
+  },
+  {
+    elem: document.querySelector("#btn-check-proxies span"),
+    key: "navbar.checkProxies",
+  },
+  {
+    elem: document.querySelector("#btn-proxy-list span"),
+    key: "navbar.proxyList",
+  },
+  {
+    elem: document.querySelector("#btn-proxy-count span"),
+    key: "navbar.proxyCount",
+  },
+  {
+    elem: document.querySelector("#btn-accounts span"),
+    key: "navbar.accounts",
+  },
+  {
+    elem: document.querySelector("#fetch-proxies-page .card-title"),
+    key: "fetchPage.title",
+  },
+  {
+    elem: document.querySelector("#fetch-proxies-page .card-subtitle"),
+    key: "fetchPage.subtitle",
+  },
+  {
+    elem: document.querySelector(".api-sources .section-title"),
+    key: "fetchPage.apiSources",
+  },
+  {
+    elem: document.querySelector("#start-fetch"),
+    key: "fetchPage.startButton",
+  },
+  {
+    elem: document.querySelector("#check-proxies-page .card-title"),
+    key: "checkPage.title",
+  },
+  {
+    elem: document.querySelector("#check-proxies-page .card-subtitle"),
+    key: "checkPage.subtitle",
+  },
+  {
+    elem: document.querySelector("#start-check"),
+    key: "checkPage.startButton",
+  },
+  {
+    elem: document.querySelector("#proxy-list-page .card-title"),
+    key: "proxyListPage.title",
+  },
+  {
+    elem: document.querySelector("#proxy-list-page .card-subtitle"),
+    key: "proxyListPage.subtitle",
+  },
+  {
+    elem: document.querySelector(".proxy-list-container .section-title"),
+    key: "proxyListPage.validProxies",
+  },
+  {
+    elem: document.querySelector(".no-proxy-message"),
+    key: "proxyListPage.noProxies",
+  },
+  {
+    elem: document.querySelector("#refresh-list"),
+    key: "proxyListPage.refreshButton",
+  },
+  {
+    elem: document.querySelector("#copy-all"),
+    key: "proxyListPage.copyButton",
+  },
+  {
+    elem: document.querySelector("#proxy-count-page .card-title"),
+    key: "proxyCountPage.title",
+  },
+  {
+    elem: document.querySelector("#proxy-count-page .card-subtitle"),
+    key: "proxyCountPage.subtitle",
+  },
+  {
+    elem: document.querySelector(".stat-title"),
+    key: "proxyCountPage.totalProxyCount",
+  },
+  {
+    elem: document.querySelector("#accounts-page .card-title"),
+    key: "accountsPage.title",
+  },
+  {
+    elem: document.querySelector("#accounts-page .card-subtitle"),
+    key: "accountsPage.subtitle",
+  },
+];
 
 // Tüm sayfaları gizleme fonksiyonu
 function hideAllPages() {
@@ -181,7 +289,7 @@ btnAccounts.addEventListener("click", () => {
 
 // İşlem başlatma butonları
 startFetch.addEventListener("click", async () => {
-  showStatus(fetchStatus, "running", "Proxy toplama işlemi başlatılıyor...");
+  showStatus(fetchStatus, "running", t("fetchPage.statusRunning"));
   startFetch.disabled = true;
 
   try {
@@ -191,86 +299,109 @@ startFetch.addEventListener("click", async () => {
       showStatus(
         fetchStatus,
         "completed",
-        `Proxy toplama işlemi tamamlandı. ${result.count} adet proxy toplandı.`
+        tParams("fetchPage.statusCompleted", { count: result.count })
       );
     } else {
-      showStatus(fetchStatus, "error", `Hata: ${result.message}`);
+      showStatus(
+        fetchStatus,
+        "error",
+        tParams("fetchPage.statusError", { message: result.message })
+      );
     }
   } catch (error) {
-    showStatus(fetchStatus, "error", `Hata: ${error.message}`);
-  } finally {
-    startFetch.disabled = false;
+    showStatus(
+      fetchStatus,
+      "error",
+      tParams("fetchPage.statusError", { message: error.message })
+    );
   }
+
+  startFetch.disabled = false;
 });
 
+// Proxy kontrol işlemi başlatma butonu
 startCheck.addEventListener("click", async () => {
-  showStatus(
-    checkStatus,
-    "running",
-    "Proxy kontrol işlemi için hazırlanıyor..."
-  );
-  startCheck.disabled = true;
-  checkProgressContainer.style.display = "none";
-
   try {
-    // İşlem başladığını işaretle
-    isCheckingProxies = true;
+    // Önce proxyleri al
+    const date = new Date();
+    const formatDate = (date) => {
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const year = date.getFullYear();
+      return `${day}_${month}_${year}`;
+    };
+    const today = formatDate(date);
+    const fs = require("fs");
+    const path = require("path");
+    const proxiesPath = path.join(__dirname, "..", `${today}_proxies.txt`);
 
-    // Önce proxyleri çek
-    const fetchResult = await ipcRenderer.invoke("fetch-proxies");
-
-    if (fetchResult.success) {
+    if (!fs.existsSync(proxiesPath)) {
       showStatus(
         checkStatus,
-        "running",
-        `${fetchResult.count} adet proxy kontrol ediliyor...`
+        "error",
+        tParams("checkPage.statusError", {
+          message: t("checkPage.noProxiesFound"),
+        })
       );
-      checkProgressContainer.style.display = "block";
+      return;
+    }
 
-      // İlerleme çubuğu sıfırla
-      checkProgressBar.style.width = "0%";
-      checkProgressText.textContent = `0 / ${fetchResult.count} (%0)`;
+    const proxyData = fs.readFileSync(proxiesPath, "utf8");
+    const proxies = proxyData.split("\n").filter((p) => p.trim());
 
-      // İlerleme durumunu güncelle
-      currentCheckProgress = {
-        current: 0,
-        total: fetchResult.count,
-        progress: 0,
-      };
-
-      // Proxy listelerini sıfırla
-      validProxies = [];
-      invalidProxies = [];
-      updateProxyLists();
-
-      // Proxy kontrolü başlat
-      const result = await ipcRenderer.invoke(
-        "check-proxies",
-        fetchResult.proxies
+    if (proxies.length === 0) {
+      showStatus(
+        checkStatus,
+        "error",
+        tParams("checkPage.statusError", {
+          message: t("checkPage.noProxiesFound"),
+        })
       );
+      return;
+    }
 
-      if (result.success) {
-        showStatus(
-          checkStatus,
-          "completed",
-          `Proxy kontrol işlemi tamamlandı. ${result.result.valid} çalışan proxy bulundu.`
-        );
-      } else {
-        showStatus(checkStatus, "error", `Hata: ${result.message}`);
-      }
+    // Kontrol işlemini başlat
+    showStatus(
+      checkStatus,
+      "running",
+      tParams("checkPage.statusRunning", { count: proxies.length })
+    );
+    startCheck.disabled = true;
+    checkProgressContainer.style.display = "block";
+    checkProgressBar.style.width = "0%";
+    checkProgressText.textContent = tParams("checkPage.progressText", {
+      current: 0,
+      total: proxies.length,
+      progress: 0,
+    });
+
+    // Kontrol işlemini başlat
+    const result = await ipcRenderer.invoke("check-proxies", proxies);
+
+    if (result.success) {
+      showStatus(
+        checkStatus,
+        "completed",
+        tParams("checkPage.statusCompleted", {
+          validCount: result.result.valid,
+        })
+      );
+      await loadValidProxies();
     } else {
       showStatus(
         checkStatus,
         "error",
-        `Proxy çekme hatası: ${fetchResult.message}`
+        tParams("checkPage.statusError", { message: result.message })
       );
     }
   } catch (error) {
-    showStatus(checkStatus, "error", `Hata: ${error.message}`);
+    showStatus(
+      checkStatus,
+      "error",
+      tParams("checkPage.statusError", { message: error.message })
+    );
   } finally {
     startCheck.disabled = false;
-    // İşlem tamamlandı işaretini koy
-    isCheckingProxies = false;
   }
 });
 
@@ -279,41 +410,31 @@ refreshListBtn.addEventListener("click", async () => {
   await loadValidProxies();
 });
 
+// Kopyalama butonu
 copyAllBtn.addEventListener("click", () => {
-  if (validProxies.length === 0) {
-    alert("Kopyalanacak proxy bulunamadı.");
-    return;
-  }
-
-  const proxyText = validProxies.join("\n");
-  navigator.clipboard
-    .writeText(proxyText)
-    .then(() => {
-      // Kopyalama başarılı
+  if (validProxies.length > 0) {
+    const text = validProxies.join("\n");
+    navigator.clipboard.writeText(text).then(() => {
       const originalText = copyAllBtn.innerHTML;
-      copyAllBtn.innerHTML = '<i class="fas fa-check"></i> Kopyalandı!';
-
+      copyAllBtn.innerHTML = `<i class="fas fa-check"></i> ${t(
+        "proxyListPage.copiedMessage"
+      )}`;
       setTimeout(() => {
         copyAllBtn.innerHTML = originalText;
       }, 2000);
-    })
-    .catch((err) => {
-      console.error("Panoya kopyalarken hata:", err);
     });
+  }
 });
 
-// İlerleme durumu olayı
+// İlerleme güncelleme eventi
 ipcRenderer.on("check-progress", (event, data) => {
-  const percentage = data.progress;
-  checkProgressBar.style.width = `${percentage}%`;
-  checkProgressText.textContent = `${data.current} / ${data.total} (%${percentage})`;
-
-  // İlerleme durumunu güncelle
-  currentCheckProgress = {
+  currentCheckProgress = data;
+  checkProgressBar.style.width = `${data.progress}%`;
+  checkProgressText.textContent = tParams("checkPage.progressText", {
     current: data.current,
     total: data.total,
-    progress: percentage,
-  };
+    progress: data.progress,
+  });
 });
 
 // Durum mesajı olayı
@@ -381,3 +502,61 @@ async function checkProcessStatus() {
     console.error("İşlem durumu kontrolü sırasında hata:", error);
   }
 }
+
+// Dil değiştirme fonksiyonu
+function changeLanguage(lang) {
+  if (setLanguage(lang)) {
+    // Dil butonlarının active durumunu güncelle
+    languageButtons.forEach((btn) => {
+      if (btn.dataset.lang === lang) {
+        btn.classList.add("active");
+      } else {
+        btn.classList.remove("active");
+      }
+    });
+
+    // Tüm metinleri güncelle
+    updateAllTexts();
+
+    // Mevcut dili localStorage'a kaydet
+    localStorage.setItem("language", lang);
+  }
+}
+
+// Tüm metinleri güncelleme fonksiyonu
+function updateAllTexts() {
+  translationElements.forEach((item) => {
+    if (item.elem) {
+      if (item.elem.tagName === "BUTTON") {
+        // İkona dokunmadan butona metin ekle
+        const icon = item.elem.querySelector("i");
+        item.elem.innerHTML = "";
+        if (icon) {
+          item.elem.appendChild(icon);
+        }
+        item.elem.insertAdjacentText("beforeend", " " + t(item.key));
+      } else {
+        item.elem.textContent = t(item.key);
+      }
+    }
+  });
+}
+
+// Sayfa yüklendiğinde
+document.addEventListener("DOMContentLoaded", () => {
+  // Kaydedilmiş dili kontrol et
+  const savedLanguage = localStorage.getItem("language");
+  if (savedLanguage && getAvailableLanguages().includes(savedLanguage)) {
+    changeLanguage(savedLanguage);
+  }
+
+  // Dil değiştirme olayları
+  languageButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      changeLanguage(btn.dataset.lang);
+    });
+  });
+
+  // İlk metin güncellemesi
+  updateAllTexts();
+});
